@@ -32,15 +32,49 @@ def contact(request):
 
 # Create a `login_request` view to handle sign in request
 def login_request(request):
-    pass
+    context = {}
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request=request, user=user)
+            return redirect('djangoapp:index')
+        else:
+            context['message'] = 'Invalid username or password'
+            return render(request=request, template_name='djangoapp/login.html', context=context)
+    else:
+        return render(request=request, template_name='djangoapp/login.html', context=context)
 
 # Create a `logout_request` view to handle sign out request
 def logout_request(request):
-    pass
+    logout(request=request)
+    return redirect('djangoapp:index')
 
 # Create a `registration_request` view to handle sign up request
 def registration_request(request):
-    pass
+    context = {}
+    if request.method == 'GET':
+        return render(request=request, template_name='djangoapp/registration.html', context=context)
+    elif request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        first_name = request.POST['firstname']
+        last_name = request.POST['lastname']
+        user_exist = False
+        try:
+            User.objects.get(username=username)
+            user_exist = True
+        except:
+            logger.debug(f'{username} is new user')
+        if not user_exist:
+            user = User.objects.create_user(username=username, first_name=first_name, last_name=last_name,
+                                            password=password)
+            login(request=request, user=user)
+            return redirect('djangoapp:index')
+        else:
+            context['message'] = 'User already exists.'
+            return render(request=request, template_name='djangoapp/registration.html', context=context)
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
 def get_dealerships(request):
